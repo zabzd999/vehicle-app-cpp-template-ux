@@ -28,7 +28,7 @@ namespace example {
 
 const auto TOPIC_REQUEST          = "seatadjuster/setPosition/request";
 const auto TOPIC_RESPONSE         = "seatadjuster/setPosition/response";
-const auto TOPIC_CURRENT_POSITION = "seatadjuster/currentPosition ";
+const auto TOPIC_CURRENT_POSITION = "seatadjuster/currentPosition";
 
 const auto JSON_FIELD_REQUEST_ID = "requestId";
 const auto JSON_FIELD_POSITION   = "position";
