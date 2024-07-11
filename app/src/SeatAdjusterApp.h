@@ -52,14 +52,18 @@ public:
      *
      * @param data  The JSON string received from PubSub topic.
      */
-    void onSetPositionRequestReceived(const std::string& data);
+    void onSetDriverPositionRequestReceived(const std::string& data);
+
+    void onSetCoDriverPositionRequestReceived(const std::string& data);
 
     /**
      * @brief Handle seat movement events from the VDB.
      *
      * @param dataPoints  The affected data points.
      */
-    void onSeatPositionChanged(const velocitas::DataPointReply& dataPoints);
+    void onDriverSeatPositionChanged(const velocitas::DataPointReply& dataPoints);
+
+    void onCoDriverSeatPositionChanged(const velocitas::DataPointReply& dataPoints);
 
     /**
      * @brief Handle errors which occurred during async invocation.

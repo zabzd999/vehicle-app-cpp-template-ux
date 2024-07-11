@@ -32,7 +32,7 @@ mock_datapoint(
             action=create_animation_action(
                 duration=10.0,
                 repeat_mode=RepeatMode.REPEAT,
-                values=[0],
+                values=[0,30,60],
             ),
         )
     ],
@@ -51,6 +51,25 @@ mock_datapoint(
         )
     ],
 )
+
+
+
+
+mock_datapoint(
+    path="Vehicle.Cabin.Seat.Row1.PassengerSide.Position",
+    initial_value=0,
+    behaviors=[
+        create_behavior(
+            trigger=create_event_trigger(EventType.ACTUATOR_TARGET),
+            action=create_animation_action(
+                duration=10.0,
+                values=["$self", "$event.value"],
+            ),
+        )
+    ],
+)
+
+
 
 mock_datapoint(
     path="Vehicle.Body.Windshield.Front.Wiping.System.Mode",
