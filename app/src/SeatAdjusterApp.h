@@ -59,6 +59,11 @@ public:
      *
      * @param dataPoints  The affected data points.
      */
+
+    void onCoPilotSeatPositionChanged(const velocitas::DataPointReply& dataPoints);
+
+    void onSetCoPilotPositionRequestReceived(const std::string& data);
+
     void onSeatPositionChanged(const velocitas::DataPointReply& dataPoints);
 
     /**
