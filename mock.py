@@ -53,6 +53,21 @@ mock_datapoint(
 )
 
 mock_datapoint(
+    path="Vehicle.Cabin.Seat.Row1.DriverSide.PositionAssi",
+    initial_value=0,
+    behaviors=[
+        create_behavior(
+            trigger=create_event_trigger(EventType.ACTUATOR_TARGET),
+            action=create_animation_action(
+                duration=10.0,
+                values=["$self", "$event.value"],
+            ),
+        )
+    ],
+)
+
+
+mock_datapoint(
     path="Vehicle.Body.Windshield.Front.Wiping.System.Mode",
     initial_value="STOP_HOLD",
     behaviors=[
