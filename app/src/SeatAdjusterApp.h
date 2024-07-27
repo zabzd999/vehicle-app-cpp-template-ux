@@ -54,16 +54,12 @@ public:
      */
     void onSetPositionRequestReceived(const std::string& data);
 
-    void onSetPositionRequestReceivedAssi(const std::string& data);
-
     /**
      * @brief Handle seat movement events from the VDB.
      *
      * @param dataPoints  The affected data points.
      */
     void onSeatPositionChanged(const velocitas::DataPointReply& dataPoints);
-
-    void onSeatPositionChangedAssi(const velocitas::DataPointReply& dataPoints);
 
     /**
      * @brief Handle errors which occurred during async invocation.
