@@ -27,6 +27,7 @@
 namespace example {
 
 const auto TOPIC_REQUEST          = "seatadjuster/setPosition/request";
+const auto TOPIC_CODRIVER         = "seatadjuster/setPosition/request/codriver";
 const auto TOPIC_RESPONSE         = "seatadjuster/setPosition/response";
 const auto TOPIC_CURRENT_POSITION = "seatadjuster/currentPosition";
 
@@ -35,6 +36,7 @@ const auto JSON_FIELD_POSITION   = "position";
 const auto JSON_FIELD_STATUS     = "status";
 const auto JSON_FIELD_MESSAGE    = "message";
 const auto JSON_FIELD_RESULT     = "result";
+// const auto JSON_FIELD_PERSOPN    = "driver";
 
 const auto STATUS_OK   = 0;
 const auto STATUS_FAIL = 1;
@@ -56,7 +58,7 @@ void SeatAdjusterApp::onStart() {
             [this](auto&& status) { onErrorDatapoint(std::forward<decltype(status)>(status)); });
 
     // ... and, unlike Python, you have to manually subscribe to pub/sub topics
-    subscribeToTopic(TOPIC_REQUEST)
+    subscribeToTopic(TOPIC_CODRIVER)
         ->onItem([this](auto&& item) {
             onSetPositionRequestReceived(std::forward<decltype(item)>(item));
         })
@@ -80,6 +82,7 @@ void SeatAdjusterApp::onSetPositionRequestReceived(const std::string& data) {
         velocitas::logger().error(errorMsg);
 
         nlohmann::json respData({{JSON_FIELD_REQUEST_ID, jsonData[JSON_FIELD_REQUEST_ID]},
+                                 //  {JSON_FIELD_REQUEST_ID, jsonData[JSON_FIELD_PERSOPN]},
                                  {JSON_FIELD_STATUS, STATUS_FAIL},
                                  {JSON_FIELD_MESSAGE, errorMsg}});
         publishToTopic(TOPIC_RESPONSE, respData.dump());
@@ -88,8 +91,11 @@ void SeatAdjusterApp::onSetPositionRequestReceived(const std::string& data) {
 
     const auto desiredSeatPosition = jsonData[JSON_FIELD_POSITION].get<int>();
     const auto requestId           = jsonData[JSON_FIELD_REQUEST_ID].get<int>();
+    // const auto driver              = jsonData[JSON_FIELD_POSITION].get<std::string>();
 
-    nlohmann::json respData({{JSON_FIELD_REQUEST_ID, requestId}, {JSON_FIELD_RESULT, {}}});
+    nlohmann::json respData({{JSON_FIELD_REQUEST_ID, requestId},
+                             //  {JSON_FIELD_POSITION, driver},
+                             {JSON_FIELD_RESULT, {}}});
 
     const auto vehicleSpeed = Vehicle.Speed.get()->await().value();
 
@@ -100,7 +106,7 @@ void SeatAdjusterApp::onSetPositionRequestReceived(const std::string& data) {
 
         respData[JSON_FIELD_RESULT][JSON_FIELD_STATUS] = STATUS_OK;
         respData[JSON_FIELD_RESULT][JSON_FIELD_MESSAGE] =
-            fmt::format("Set Seat position to: {}", desiredSeatPosition);
+            fmt::format("Set Seat position to: {},", desiredSeatPosition);
     } else {
         const auto errorMsg = fmt::format(
             "Not allowed to move seat because vehicle speed is {} and not 0", vehicleSpeed);
