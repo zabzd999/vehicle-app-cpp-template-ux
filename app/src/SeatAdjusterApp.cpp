@@ -28,8 +28,6 @@ namespace example {
 
 const auto TOPIC_REQUEST          = "seatadjuster/setPosition/request";
 const auto TOPIC_RESPONSE         = "seatadjuster/setPosition/response";
-const auto TOPIC_REQUESTASSI      = "seatadjuster/setPosition/requestAssi";
-const auto TOPIC_RESPONSEASSI     = "seatadjuster/setPosition/responseAssi";
 const auto TOPIC_CURRENT_POSITION = "seatadjuster/currentPosition";
 
 const auto JSON_FIELD_REQUEST_ID = "requestId";
@@ -57,23 +55,10 @@ void SeatAdjusterApp::onStart() {
         ->onError(
             [this](auto&& status) { onErrorDatapoint(std::forward<decltype(status)>(status)); });
 
-    subscribeDataPointsAssi(
-        velocitas::QueryBuilder::select(Vehicle.Cabin.Seat.Row1.DriverSide.PositionAssi).build())
-        ->onItem(
-            [this](auto&& item) { onSeatPositionChangedAssi(std::forward<decltype(item)>(item)); })
-        ->onError(
-            [this](auto&& status) { onErrorDatapoint(std::forward<decltype(status)>(status)); });
-
     // ... and, unlike Python, you have to manually subscribe to pub/sub topics
     subscribeToTopic(TOPIC_REQUEST)
         ->onItem([this](auto&& item) {
             onSetPositionRequestReceived(std::forward<decltype(item)>(item));
-        })
-        ->onError([this](auto&& status) { onErrorTopic(std::forward<decltype(status)>(status)); });
-
-    subscribeToTopicAssi(TOPIC_REQUESTASSI)
-        ->onItem([this](auto&& item) {
-            onSetPositionRequestReceivedAssi(std::forward<decltype(item)>(item));
         })
         ->onError([this](auto&& status) { onErrorTopic(std::forward<decltype(status)>(status)); });
 }
@@ -137,77 +122,6 @@ void SeatAdjusterApp::onSeatPositionChanged(const velocitas::DataPointReply& dat
         // Get the current seat position
         const auto seatPositionValue =
             dataPoints.get(Vehicle.Cabin.Seat.Row1.DriverSide.Position)->value();
-        jsonResponse[JSON_FIELD_POSITION] = seatPositionValue;
-    } catch (std::exception& exception) {
-        velocitas::logger().warn("Unable to get Current Seat Position, Exception: {}",
-                                 exception.what());
-        jsonResponse[JSON_FIELD_STATUS]  = STATUS_FAIL;
-        jsonResponse[JSON_FIELD_MESSAGE] = exception.what();
-    }
-
-    // Publish the current seat position to the MQTT topic
-    publishToTopic(TOPIC_CURRENT_POSITION, jsonResponse.dump());
-}
-
-void SeatAdjusterApp::onSetPositionRequestReceivedAssi(const std::string& data) {
-    // Callback is executed whenever a message is received on the subscribed topic
-    // The data parameter contains the message payload
-    // Payload format: {"requestId": 1, "position": 1}
-
-    // Use the logger with the preferred log level (e.g. debug, info, error, etc)
-    velocitas::logger().debug("position request: \"{}\"", data);
-
-    // Parse the received JSON data
-    const auto jsonData = nlohmann::json::parse(data);
-
-    // Check if the received JSON data contains the required fields
-    if (!jsonData.contains(JSON_FIELD_POSITION)) {
-        const auto errorMsg = fmt::format("No position specified");
-        velocitas::logger().error(errorMsg);
-
-        nlohmann::json respData({{JSON_FIELD_REQUEST_ID, jsonData[JSON_FIELD_REQUEST_ID]},
-                                 {JSON_FIELD_STATUS, STATUS_FAIL},
-                                 {JSON_FIELD_MESSAGE, errorMsg}});
-        publishToTopic(TOPIC_RESPONSEASSI, respData.dump());
-        return;
-    }
-
-    const auto desiredSeatPosition = jsonData[JSON_FIELD_POSITION].get<int>();
-    const auto requestId           = jsonData[JSON_FIELD_REQUEST_ID].get<int>();
-
-    nlohmann::json respData({{JSON_FIELD_REQUEST_ID, requestId}, {JSON_FIELD_RESULT, {}}});
-
-    const auto vehicleSpeed = Vehicle.Speed.get()->await().value();
-
-    // Check if the vehicle is not moving
-    if (vehicleSpeed == 0) {
-        // Move the seat to the desired position
-        Vehicle.Cabin.Seat.Row1.DriverSide.PositionAssi.set(desiredSeatPosition)->await();
-
-        respData[JSON_FIELD_RESULT][JSON_FIELD_STATUS] = STATUS_OK;
-        respData[JSON_FIELD_RESULT][JSON_FIELD_MESSAGE] =
-            fmt::format("Set Seat position to: {}", desiredSeatPosition);
-    } else {
-        const auto errorMsg = fmt::format(
-            "Not allowed to move seat because vehicle speed is {} and not 0", vehicleSpeed);
-        velocitas::logger().info(errorMsg);
-
-        respData[JSON_FIELD_RESULT][JSON_FIELD_STATUS]  = STATUS_FAIL;
-        respData[JSON_FIELD_RESULT][JSON_FIELD_MESSAGE] = errorMsg;
-    }
-
-    // Publish the response to the MQTT topic
-    publishToTopic(TOPIC_RESPONSEASSI, respData.dump());
-}
-
-void SeatAdjusterApp::onSeatPositionChangedAssi(const velocitas::DataPointReply& dataPoints) {
-    // Callback is executed whenever the subscribed datapoints are updated
-    // The dataPoints parameter contains the updated datapoints
-    nlohmann::json jsonResponse;
-    try {
-        // Get the current seat position
-        const auto seatPositionValue =
-            dataPoints.get(Vehicle.Cabin.Seat.Row1.DriverSide.PositionAssi)->value();
         jsonResponse[JSON_FIELD_POSITION] = seatPositionValue;
     } catch (std::exception& exception) {
         velocitas::logger().warn("Unable to get Current Seat Position, Exception: {}",
