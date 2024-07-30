@@ -56,5 +56,14 @@
         "memory_resource": "cpp",
         "numeric": "cpp",
         "random": "cpp"
-    }
+    },
+    "vsmqtt.brokerProfiles": [
+        {
+            "name": "mosquitto",
+            "host": "localhost",
+            "port": 1883,
+            "clientId": "vsmqtt_client",
+            "savedSubscriptions": [ ]
+        }
+    ]
 }
