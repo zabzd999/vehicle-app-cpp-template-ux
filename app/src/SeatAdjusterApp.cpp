@@ -27,6 +27,7 @@
 namespace example {
 
 const auto TOPIC_REQUEST          = "seatadjuster/setPosition/request";
+const auto TOPIC_REQUEST_Right    = "seatadjuster/setPosition/requestRight";
 const auto TOPIC_RESPONSE         = "seatadjuster/setPosition/response";
 const auto TOPIC_CURRENT_POSITION = "seatadjuster/currentPosition";
 
@@ -57,6 +58,12 @@ void SeatAdjusterApp::onStart() {
 
     // ... and, unlike Python, you have to manually subscribe to pub/sub topics
     subscribeToTopic(TOPIC_REQUEST)
+        ->onItem([this](auto&& item) {
+            onSetPositionRequestReceived(std::forward<decltype(item)>(item));
+        })
+        ->onError([this](auto&& status) { onErrorTopic(std::forward<decltype(status)>(status)); });
+
+    subscribeToTopic(TOPIC_REQUEST_Right)
         ->onItem([this](auto&& item) {
             onSetPositionRequestReceived(std::forward<decltype(item)>(item));
         })

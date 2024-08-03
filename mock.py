@@ -32,7 +32,7 @@ mock_datapoint(
             action=create_animation_action(
                 duration=10.0,
                 repeat_mode=RepeatMode.REPEAT,
-                values=[0],
+                values=[0, 0.0, 50.0, 70.0, 100.0, 70.0, 50.0, 30.0, 0.0],
             ),
         )
     ],
