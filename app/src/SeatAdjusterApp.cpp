@@ -26,9 +26,12 @@
 
 namespace example {
 
-const auto TOPIC_REQUEST          = "seatadjuster/setPosition/request";
-const auto TOPIC_RESPONSE         = "seatadjuster/setPosition/response";
-const auto TOPIC_CURRENT_POSITION = "seatadjuster/currentPosition";
+const auto TOPIC_REQUEST            = "seatadjuster/setPosition/request";
+const auto TOPIC_RESPONSE           = "seatadjuster/setPosition/response";
+const auto TOPIC_CURRENT_POSITION   = "seatadjuster/currentPosition";
+const auto TOPIC_REQUEST_C          = "seatadjuster/setPosition/request_c";
+const auto TOPIC_RESPONSE_C         = "seatadjuster/setPosition/response_c";
+const auto TOPIC_CURRENT_POSITION_C = "seatadjuster/currentPosition_c";
 
 const auto JSON_FIELD_REQUEST_ID = "requestId";
 const auto JSON_FIELD_POSITION   = "position";
@@ -56,7 +59,14 @@ void SeatAdjusterApp::onStart() {
             [this](auto&& status) { onErrorDatapoint(std::forward<decltype(status)>(status)); });
 
     // ... and, unlike Python, you have to manually subscribe to pub/sub topics
-    subscribeToTopic(TOPIC_REQUEST)
+    // subscribeToTopic(TOPIC_REQUEST)
+    //    ->onItem([this](auto&& item) {
+    //        onSetPositionRequestReceived(std::forward<decltype(item)>(item));
+    //    })
+    //    ->onError([this](auto&& status) { onErrorTopic(std::forward<decltype(status)>(status));
+    //    });
+
+    subscribeToTopic(TOPIC_REQUEST_C)
         ->onItem([this](auto&& item) {
             onSetPositionRequestReceived(std::forward<decltype(item)>(item));
         })
@@ -82,7 +92,8 @@ void SeatAdjusterApp::onSetPositionRequestReceived(const std::string& data) {
         nlohmann::json respData({{JSON_FIELD_REQUEST_ID, jsonData[JSON_FIELD_REQUEST_ID]},
                                  {JSON_FIELD_STATUS, STATUS_FAIL},
                                  {JSON_FIELD_MESSAGE, errorMsg}});
-        publishToTopic(TOPIC_RESPONSE, respData.dump());
+        // publishToTopic(TOPIC_RESPONSE, respData.dump());
+        publishToTopic(TOPIC_RESPONSE_C, respData.dump());
         return;
     }
 
@@ -111,7 +122,8 @@ void SeatAdjusterApp::onSetPositionRequestReceived(const std::string& data) {
     }
 
     // Publish the response to the MQTT topic
-    publishToTopic(TOPIC_RESPONSE, respData.dump());
+    // publishToTopic(TOPIC_RESPONSE, respData.dump());
+    publishToTopic(TOPIC_RESPONSE_C, respData.dump());
 }
 
 void SeatAdjusterApp::onSeatPositionChanged(const velocitas::DataPointReply& dataPoints) {
@@ -131,7 +143,8 @@ void SeatAdjusterApp::onSeatPositionChanged(const velocitas::DataPointReply& dat
     }
 
     // Publish the current seat position to the MQTT topic
-    publishToTopic(TOPIC_CURRENT_POSITION, jsonResponse.dump());
+    // publishToTopic(TOPIC_CURRENT_POSITION, jsonResponse.dump());
+    publishToTopic(TOPIC_CURRENT_POSITION_C, jsonResponse.dump());
 }
 
 // Error handling methods
